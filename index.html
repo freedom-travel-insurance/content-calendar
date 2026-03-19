@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Content Calendar — April 2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f7f6f2; --bg3: #f1f0eb;
+    --text: #1a1a18; --text2: #5a5a56; --text3: #9a9a96;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+    --radius: 8px; --radius-lg: 12px;
+    --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #085041;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+
+  /* AUTH */
+  #auth-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:1.5rem; padding:2rem; }
+  #auth-screen h1 { font-size:22px; font-weight:500; }
+  #auth-screen p { font-size:14px; color:var(--text2); text-align:center; max-width:320px; line-height:1.6; }
+  .btn-google { display:flex; align-items:center; gap:10px; padding:10px 20px; border-radius:var(--radius); border:0.5px solid var(--border2); background:#fff; cursor:pointer; font-size:14px; font-weight:500; color:var(--text); box-shadow:var(--shadow); transition:box-shadow 0.15s; }
+  .btn-google:hover { box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .btn-google svg { width:18px; height:18px; }
+
+  /* LAYOUT */
+  #app { display:none; max-width:1100px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px; }
+  .topbar-left h1 { font-size:20px; font-weight:500; }
+  .topbar-left p { font-size:12px; color:var(--text2); margin-top:2px; }
+  .topbar-right { display:flex; align-items:center; gap:8px; }
+  .user-pill { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); }
+  .user-pill img { width:24px; height:24px; border-radius:50%; border:0.5px solid var(--border); }
+  .btn-signout { font-size:11px; padding:3px 10px; border-radius:20px; border:0.5px solid var(--border2); background:transparent; cursor:pointer; color:var(--text2); }
+
+  /* STATS */
+  .stats { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .stat-pill { font-size:11px; padding:3px 10px; border-radius:20px; font-weight:500; }
+
+  /* TOOLBAR */
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+  .toolbar label { font-size:11px; color:var(--text3); }
+  .toolbar select { font-size:12px; padding:5px 8px; border-radius:var(--radius); border:0.5px solid var(--border2); background:#fff; color:var(--text); cursor:pointer; }
+  .btn-add { margin-left:auto; font-size:12px; padding:6px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:#fff; cursor:pointer; font-weight:500; color:var(--text); }
+  .btn-add:hover { background:var(--bg2); }
+
+  /* ADD FORM */
+  .add-form { background:#fff; border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:1rem; margin-bottom:1rem; box-shadow:var(--shadow); }
+  .add-form h3 { font-size:13px; font-weight:500; margin-bottom:12px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
+  .form-field label { font-size:11px; color:var(--text2); display:block; margin-bottom:3px; }
+  .form-field input, .form-field select, .form-field textarea { font-family:inherit; font-size:12px; padding:5px 8px; border-radius:var(--radius); border:0.5px solid var(--border2); background:#fff; color:var(--text); width:100%; }
+  .form-field textarea { resize:vertical; }
+  .form-actions { display:flex; gap:8px; margin-top:10px; }
+  .btn-primary { font-size:12px; padding:6px 16px; border-radius:var(--radius); border:none; background:var(--green); color:#fff; cursor:pointer; font-weight:500; }
+  .btn-secondary { font-size:12px; padding:6px 14px; border-radius:var(--radius); border:0.5px solid var(--border2); background:transparent; color:var(--text2); cursor:pointer; }
+  .btn-danger { font-size:12px; padding:6px 14px; border-radius:var(--radius); border:none; background:#FCEBEB; color:#A32D2D; cursor:pointer; margin-left:auto; }
+
+  /* WEEK GROUPS */
+  .week-group { margin-bottom:1.25rem; border-radius:var(--radius-lg); overflow:hidden; border:0.5px solid; }
+  .week-head { padding:9px 14px; display:flex; justify-content:space-between; align-items:center; }
+  .week-head-title { font-size:13px; font-weight:500; }
+  .week-head-sub { font-size:11px; opacity:0.75; }
+
+  /* ROWS */
+  .item-row { border-bottom:0.5px solid; background:#fff; }
+  .item-row:last-child { border-bottom:none; }
+  .item-summary { padding:10px 14px; cursor:pointer; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .item-summary:hover { background:var(--bg2); }
+  .item-left { flex:1; min-width:0; }
+  .item-meta { display:flex; gap:5px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+  .item-date { font-size:11px; color:var(--text3); min-width:72px; }
+  .pill { font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500; white-space:nowrap; display:inline-block; }
+  .item-icon { font-size:11px; color:var(--text3); }
+  .item-idea { font-size:12px; color:var(--text); line-height:1.5; }
+  .item-status { flex-shrink:0; }
+
+  /* EXPANDED */
+  .item-expanded { padding:1rem 14px; background:var(--bg2); border-top:0.5px solid var(--border); }
+  .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .edit-meta { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .edit-link { margin-bottom:10px; }
+
+  /* EMPTY */
+  .empty { padding:2rem; text-align:center; color:var(--text2); font-size:13px; }
+
+  /* LOADING */
+  #loading { display:flex; align-items:center; justify-content:center; min-height:100vh; font-size:14px; color:var(--text2); }
+
+  .saving { font-size:11px; color:var(--text3); }
+</style>
+</head>
+<body>
+
+<div id="loading">Loading...</div>
+
+<div id="auth-screen" style="display:none;">
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#EAF3DE"/><path d="M8 16h16M16 8v16" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"/></svg>
+  <h1>Content Calendar</h1>
+  <p>Sign in with your Google account to access the team content calendar.</p>
+  <button class="btn-google" onclick="signIn()">
+    <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.706C3.784 10.166 3.682 9.59 3.682 9s.102-1.166.282-1.706V4.962H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/></svg>
+    Sign in with Google
+  </button>
+</div>
+
+<div id="app"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCvTpjuhqoy4Rx-ntPbIj417CN7dl1owkY",
+  authDomain: "content-calendar-rr.firebaseapp.com",
+  projectId: "content-calendar-rr",
+  storageBucket: "content-calendar-rr.firebasestorage.app",
+  messagingSenderId: "84057620923",
+  appId: "1:84057620923:web:fced246d9e570a9e89049e"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const BRANDS   = ["Freedom","OK To Travel","One Tree","Roland"];
+const CHANNELS = ["FB/IG + LinkedIn","Blog","Email","LinkedIn"];
+const STATUSES = ["To Do","In Progress","Scheduled","Live"];
+const THEMES   = ["Easter","Cancer","Diabetes","Heart","Wrap-up"];
+const WEEKS    = ["Week 1","Week 2","Week 3","Week 4","Week 5"];
+
+const WEEK_META = {
+  "Week 1":{ label:"Easter / Sustainable travel",   theme:"Easter",   dates:"1–5 Apr"  },
+  "Week 2":{ label:"Cancer / Budget travel",         theme:"Cancer",   dates:"7–12 Apr" },
+  "Week 3":{ label:"Diabetes / Responsible tourism", theme:"Diabetes", dates:"14–19 Apr"},
+  "Week 4":{ label:"Heart & circulatory / Earth Day",theme:"Heart",    dates:"21–26 Apr"},
+  "Week 5":{ label:"Wrap-up & evergreen",            theme:"Wrap-up",  dates:"28–30 Apr"},
+};
+
+const BRAND_CH = {
+  "Freedom":      {color:"#712B13",bg:"#FAECE7"},
+  "OK To Travel": {color:"#3C3489",bg:"#EEEDFE"},
+  "One Tree":     {color:"#3B6D11",bg:"#EAF3DE"},
+  "Roland":       {color:"#0C447C",bg:"#E6F1FB"},
+};
+const CHAN_CH = {
+  "FB/IG + LinkedIn":{color:"#085041",bg:"#E1F5EE"},
+  "Blog":            {color:"#3C3489",bg:"#EEEDFE"},
+  "Email":           {color:"#633806",bg:"#FAEEDA"},
+  "LinkedIn":        {color:"#0C447C",bg:"#E6F1FB"},
+};
+const STAT_CH = {
+  "To Do":      {color:"#5F5E5A",bg:"#F1EFE8"},
+  "In Progress":{color:"#633806",bg:"#FAEEDA"},
+  "Scheduled":  {color:"#0C447C",bg:"#E6F1FB"},
+  "Live":       {color:"#085041",bg:"#E1F5EE"},
+};
+const THEME_CH = {
+  "Easter":  {color:"#3B6D11",bg:"#EAF3DE",border:"#C0DD97"},
+  "Cancer":  {color:"#3C3489",bg:"#EEEDFE",border:"#CECBF6"},
+  "Diabetes":{color:"#633806",bg:"#FAEEDA",border:"#FAC775"},
+  "Heart":   {color:"#712B13",bg:"#FAECE7",border:"#F5C4B3"},
+  "Wrap-up": {color:"#444441",bg:"#F1EFE8",border:"#D3D1C7"},
+};
+
+const SEED = [
+  {id:"w1-01",date:"Tue 1 Apr", week:"Week 1",theme:"Easter",  brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Spring travel inspiration — is your cover sorted?",status:"To Do",notes:"",link:""},
+  {id:"w1-02",date:"Tue 1 Apr", week:"Week 1",theme:"Easter",  brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Eco-friendly Easter breaks — travel sustainably this spring",status:"To Do",notes:"",link:""},
+  {id:"w1-03",date:"Wed 2 Apr", week:"Week 1",theme:"Easter",  brand:"Freedom",      channel:"Blog",            idea:"Easter breaks for the over 50s — travel with confidence",status:"To Do",notes:"",link:""},
+  {id:"w1-04",date:"Wed 2 Apr", week:"Week 1",theme:"Easter",  brand:"OK To Travel", channel:"Blog",            idea:"Easter travel with no upper age limit — your guide",status:"To Do",notes:"",link:""},
+  {id:"w1-05",date:"Wed 2 Apr", week:"Week 1",theme:"Easter",  brand:"Roland",       channel:"LinkedIn",        idea:"Personal take — why Easter is the perfect time to travel whatever your age or health",status:"To Do",notes:"",link:""},
+  {id:"w1-06",date:"Thu 3 Apr", week:"Week 1",theme:"Easter",  brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Couples destination inspiration — spring breaks done right",status:"To Do",notes:"",link:""},
+  {id:"w1-07",date:"Thu 3 Apr", week:"Week 1",theme:"Easter",  brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"How to have a lower-impact Easter break",status:"To Do",notes:"",link:""},
+  {id:"w1-08",date:"Sat 5 Apr", week:"Week 1",theme:"Easter",  brand:"Freedom",      channel:"Email",           idea:"Easter is almost here — travel with confidence whatever your health",status:"To Do",notes:"",link:""},
+  {id:"w1-09",date:"Sat 5 Apr", week:"Week 1",theme:"Easter",  brand:"OK To Travel", channel:"Email",           idea:"Your Easter adventure awaits — no age limit, no worries",status:"To Do",notes:"",link:""},
+  {id:"w2-01",date:"Tue 8 Apr", week:"Week 2",theme:"Cancer",  brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"A cancer diagnosis doesn't mean your travel days are over",status:"To Do",notes:"",link:""},
+  {id:"w2-02",date:"Tue 8 Apr", week:"Week 2",theme:"Cancer",  brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Budget spring travel — where to go for less this April",status:"To Do",notes:"",link:""},
+  {id:"w2-03",date:"Wed 9 Apr", week:"Week 2",theme:"Cancer",  brand:"Freedom",      channel:"Blog",            idea:"Can I get travel insurance with cancer? What you need to know",status:"To Do",notes:"",link:""},
+  {id:"w2-04",date:"Wed 9 Apr", week:"Week 2",theme:"Cancer",  brand:"OK To Travel", channel:"Blog",            idea:"Travelling with cancer at any age — what you need to know",status:"To Do",notes:"",link:""},
+  {id:"w2-05",date:"Wed 9 Apr", week:"Week 2",theme:"Cancer",  brand:"Roland",       channel:"LinkedIn",        idea:"Personal take — why nobody should feel travel is out of reach after a cancer diagnosis",status:"To Do",notes:"",link:""},
+  {id:"w2-06",date:"Thu 10 Apr",week:"Week 2",theme:"Cancer",  brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Practical tips for travelling with cancer confidently",status:"To Do",notes:"",link:""},
+  {id:"w2-07",date:"Thu 10 Apr",week:"Week 2",theme:"Cancer",  brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Spring on a budget — spend less, see more",status:"To Do",notes:"",link:""},
+  {id:"w2-08",date:"Sat 12 Apr",week:"Week 2",theme:"Cancer",  brand:"Freedom",      channel:"Email",           idea:"Cancer and travel — why the right cover makes all the difference",status:"To Do",notes:"",link:""},
+  {id:"w2-09",date:"Sat 12 Apr",week:"Week 2",theme:"Cancer",  brand:"OK To Travel", channel:"Email",           idea:"Still dreaming of travel after a diagnosis? We can help",status:"To Do",notes:"",link:""},
+  {id:"w3-01",date:"Tue 15 Apr",week:"Week 3",theme:"Diabetes",brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Diabetes doesn't have to stop you travelling — here's why",status:"To Do",notes:"",link:""},
+  {id:"w3-02",date:"Tue 15 Apr",week:"Week 3",theme:"Diabetes",brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"What is responsible tourism and why does it matter?",status:"To Do",notes:"",link:""},
+  {id:"w3-03",date:"Wed 16 Apr",week:"Week 3",theme:"Diabetes",brand:"Freedom",      channel:"Blog",            idea:"Travel insurance with diabetes — your questions answered",status:"To Do",notes:"",link:""},
+  {id:"w3-04",date:"Wed 16 Apr",week:"Week 3",theme:"Diabetes",brand:"OK To Travel", channel:"Blog",            idea:"Travelling with diabetes at any age — what to know before you go",status:"To Do",notes:"",link:""},
+  {id:"w3-05",date:"Wed 16 Apr",week:"Week 3",theme:"Diabetes",brand:"Roland",       channel:"LinkedIn",        idea:"Personal take — the importance of declaring medical conditions honestly when buying travel insurance",status:"To Do",notes:"",link:""},
+  {id:"w3-06",date:"Thu 17 Apr",week:"Week 3",theme:"Diabetes",brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Destination ideas perfect for managing your health on holiday",status:"To Do",notes:"",link:""},
+  {id:"w3-07",date:"Thu 17 Apr",week:"Week 3",theme:"Diabetes",brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"How to be a more responsible traveller — small changes, big impact",status:"To Do",notes:"",link:""},
+  {id:"w3-08",date:"Sat 19 Apr",week:"Week 3",theme:"Diabetes",brand:"Freedom",      channel:"Email",           idea:"Diabetes and travel — what to declare and why it matters",status:"To Do",notes:"",link:""},
+  {id:"w3-09",date:"Sat 19 Apr",week:"Week 3",theme:"Diabetes",brand:"OK To Travel", channel:"Email",           idea:"Diabetes and travel insurance — peace of mind at any age",status:"To Do",notes:"",link:""},
+  {id:"w4-01",date:"Tue 22 Apr",week:"Week 4",theme:"Heart",   brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"A heart condition shouldn't put your travel plans on hold",status:"To Do",notes:"",link:""},
+  {id:"w4-02",date:"Tue 22 Apr",week:"Week 4",theme:"Heart",   brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Earth Day — how does travel impact our planet?",status:"To Do",notes:"",link:""},
+  {id:"w4-03",date:"Wed 23 Apr",week:"Week 4",theme:"Heart",   brand:"Freedom",      channel:"Blog",            idea:"Heart conditions and travel insurance — what you need to declare and why",status:"To Do",notes:"",link:""},
+  {id:"w4-04",date:"Wed 23 Apr",week:"Week 4",theme:"Heart",   brand:"OK To Travel", channel:"Blog",            idea:"Travelling with a heart condition — peace of mind at any age",status:"To Do",notes:"",link:""},
+  {id:"w4-05",date:"Wed 23 Apr",week:"Week 4",theme:"Heart",   brand:"Roland",       channel:"LinkedIn",        idea:"Earth Day personal take — why sustainable travel matters to us as a business",status:"To Do",notes:"",link:""},
+  {id:"w4-06",date:"Thu 24 Apr",week:"Week 4",theme:"Heart",   brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Real reasons to still travel with a heart condition",status:"To Do",notes:"",link:""},
+  {id:"w4-07",date:"Thu 24 Apr",week:"Week 4",theme:"Heart",   brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Happy Earth Day — travel more sustainably with One Tree",status:"To Do",notes:"",link:""},
+  {id:"w4-08",date:"Sat 26 Apr",week:"Week 4",theme:"Heart",   brand:"Freedom",      channel:"Email",           idea:"Heart conditions and travel — the cover that gives you confidence",status:"To Do",notes:"",link:""},
+  {id:"w4-09",date:"Sat 26 Apr",week:"Week 4",theme:"Heart",   brand:"OK To Travel", channel:"Email",           idea:"Still travelling with a heart condition? Here's what you need",status:"To Do",notes:"",link:""},
+  {id:"w5-01",date:"Tue 29 Apr",week:"Week 5",theme:"Wrap-up", brand:"Freedom",      channel:"FB/IG + LinkedIn",idea:"Whatever your condition, we can help you travel",status:"To Do",notes:"",link:""},
+  {id:"w5-02",date:"Tue 29 Apr",week:"Week 5",theme:"Wrap-up", brand:"One Tree",     channel:"FB/IG + LinkedIn",idea:"Travel more, tread lighter — that's the One Tree way",status:"To Do",notes:"",link:""},
+  {id:"w5-03",date:"Wed 30 Apr",week:"Week 5",theme:"Wrap-up", brand:"Freedom",      channel:"Blog",            idea:"Travelling with a pre-existing condition — your complete guide",status:"To Do",notes:"",link:""},
+  {id:"w5-04",date:"Wed 30 Apr",week:"Week 5",theme:"Wrap-up", brand:"OK To Travel", channel:"Blog",            idea:"The complete guide to travelling with a medical condition at any age",status:"To Do",notes:"",link:""},
+  {id:"w5-05",date:"Wed 30 Apr",week:"Week 5",theme:"Wrap-up", brand:"Roland",       channel:"LinkedIn",        idea:"Personal take — what April taught us about travel, health and sustainability",status:"To Do",notes:"",link:""},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+let items = [];
+let filters = { brand:"All", channel:"All", status:"All" };
+let expandedId = null;
+let editForm = {};
+let showAdd = false;
+let newItem = { date:"", week:"Week 1", theme:"Easter", brand:"Freedom", channel:"Blog", idea:"", status:"To Do", notes:"", link:"" };
+let currentUser = null;
+let saving = false;
+let unsubscribe = null;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+
+function signIn() { auth.signInWithPopup(provider).catch(e => alert("Sign in failed: " + e.message)); }
+function signOut() { if(unsubscribe) unsubscribe(); auth.signOut(); }
+
+auth.onAuthStateChanged(user => {
+  document.getElementById("loading").style.display = "none";
+  if (user) {
+    currentUser = user;
+    document.getElementById("auth-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    startListening();
+  } else {
+    currentUser = null;
+    document.getElementById("auth-screen").style.display = "flex";
+    document.getElementById("app").style.display = "none";
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  }
+});
+
+// ── FIRESTORE ─────────────────────────────────────────────────────────────────
+
+const COL = "content-items";
+
+function startListening() {
+  unsubscribe = db.collection(COL).orderBy("id").onSnapshot(snap => {
+    if (snap.empty) {
+      seedData();
+    } else {
+      items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }
+  }, err => console.error(err));
+}
+
+async function seedData() {
+  const batch = db.batch();
+  SEED.forEach(item => {
+    const ref = db.collection(COL).doc(item.id);
+    batch.set(ref, item);
+  });
+  await batch.commit();
+}
+
+async function saveItem(item) {
+  saving = true; render();
+  await db.collection(COL).doc(item.id).set(item);
+  saving = false;
+}
+
+async function addNewItem(item) {
+  saving = true; render();
+  const ref = db.collection(COL).doc();
+  await ref.set({ ...item, id: ref.id });
+  saving = false;
+}
+
+async function removeItem(id) {
+  saving = true; render();
+  await db.collection(COL).doc(id).delete();
+  saving = false;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+function pill(bg, color, text) {
+  return `<span class="pill" style="background:${bg};color:${color}">${esc(text)}</span>`;
+}
+
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function selHtml(name, val, opts, onChange) {
+  return `<select onchange="${onChange}">` +
+    opts.map(o => `<option${o===val?" selected":""}>${esc(o)}</option>`).join("") +
+    `</select>`;
+}
+
+function filtered() {
+  return items.filter(i =>
+    (filters.brand   === "All" || i.brand   === filters.brand)   &&
+    (filters.channel === "All" || i.channel === filters.channel) &&
+    (filters.status  === "All" || i.status  === filters.status)
+  );
+}
+
+// ── EVENT HANDLERS ────────────────────────────────────────────────────────────
+
+window.signIn  = signIn;
+window.signOut = signOut;
+
+window.setFilter = (key, val) => { filters[key] = val; render(); };
+window.toggleAdd = () => { showAdd = !showAdd; expandedId = null; editForm = {}; render(); };
+
+window.toggleRow = id => {
+  if (expandedId === id) { expandedId = null; editForm = {}; }
+  else { const i = items.find(x=>x.id===id); expandedId = id; editForm = {...i}; showAdd = false; }
+  render();
+};
+
+window.onEditField = (key, val) => { editForm[key] = val; };
+window.onNewField  = (key, val) => { newItem[key]  = val; };
+
+window.doSaveEdit = async () => {
+  const copy = {...editForm};
+  expandedId = null; editForm = {};
+  await saveItem(copy);
+};
+
+window.doDelete = async () => {
+  const id = editForm.id;
+  expandedId = null; editForm = {};
+  await removeItem(id);
+};
+
+window.doCancelEdit = () => { expandedId = null; editForm = {}; render(); };
+
+window.doAddNew = async () => {
+  if (!newItem.idea.trim()) { alert("Please enter a content idea."); return; }
+  const copy = {...newItem};
+  showAdd = false;
+  newItem = { date:"", week:"Week 1", theme:"Easter", brand:"Freedom", channel:"Blog", idea:"", status:"To Do", notes:"", link:"" };
+  await addNewItem(copy);
+};
+
+window.doCancelAdd = () => { showAdd = false; render(); };
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function render() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  const f = filtered();
+  const statCounts = STATUSES.reduce((a,s) => ({...a, [s]: items.filter(i=>i.status===s).length}), {});
+
+  // topbar
+  const topbar = `
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Content Calendar — April 2026</h1>
+        <p>${saving ? '<span class="saving">Saving...</span>' : `${items.length} items across 3 brands`}</p>
+      </div>
+      <div class="topbar-right">
+        ${currentUser ? `<div class="user-pill"><img src="${currentUser.photoURL||""}" alt="" />${esc(currentUser.displayName||currentUser.email)}</div>` : ""}
+        <button class="btn-signout" onclick="signOut()">Sign out</button>
+      </div>
+    </div>`;
+
+  // stats
+  const stats = `<div class="stats">
+    <span class="stat-pill" style="background:#F1EFE8;color:#444441;font-weight:500;">${items.length} total</span>
+    ${STATUSES.map(s => { const sc=STAT_CH[s]; return `<span class="stat-pill" style="background:${sc.bg};color:${sc.color}">${statCounts[s]} ${s.toLowerCase()}</span>`; }).join("")}
+  </div>`;
+
+  // toolbar
+  const toolbar = `<div class="toolbar">
+    <label>Filter:</label>
+    ${["brand","channel","status"].map(k => {
+      const opts = k==="brand"?["All",...BRANDS]:k==="channel"?["All",...CHANNELS]:["All",...STATUSES];
+      return `<select onchange="setFilter('${k}',this.value)">${opts.map(o=>`<option${o===filters[k]?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
+    }).join("")}
+    <button class="btn-add" onclick="toggleAdd()">${showAdd ? "✕ Cancel" : "+ Add item"}</button>
+  </div>`;
+
+  // add form
+  let addForm = "";
+  if (showAdd) {
+    addForm = `<div class="add-form">
+      <h3>New content item</h3>
+      <div class="form-grid">
+        <div class="form-field"><label>Brand</label>${selHtml("brand",newItem.brand,BRANDS,"onNewField('brand',this.value)")}</div>
+        <div class="form-field"><label>Channel</label>${selHtml("channel",newItem.channel,CHANNELS,"onNewField('channel',this.value)")}</div>
+        <div class="form-field"><label>Status</label>${selHtml("status",newItem.status,STATUSES,"onNewField('status',this.value)")}</div>
+        <div class="form-field"><label>Week</label>${selHtml("week",newItem.week,WEEKS,"onNewField('week',this.value)")}</div>
+        <div class="form-field"><label>Theme</label>${selHtml("theme",newItem.theme,THEMES,"onNewField('theme',this.value)")}</div>
+        <div class="form-field"><label>Date</label><input value="${esc(newItem.date)}" oninput="onNewField('date',this.value)" placeholder="e.g. Tue 1 Apr" /></div>
+      </div>
+      <div class="form-field" style="margin-bottom:8px;"><label>Content idea</label><textarea rows="2" oninput="onNewField('idea',this.value)" placeholder="Enter the content idea...">${esc(newItem.idea)}</textarea></div>
+      <div class="form-field" style="margin-bottom:10px;"><label>Notes</label><textarea rows="1" oninput="onNewField('notes',this.value)" placeholder="Optional notes...">${esc(newItem.notes)}</textarea></div>
+      <div class="form-actions"><button class="btn-primary" onclick="doAddNew()">Save item</button><button class="btn-secondary" onclick="doCancelAdd()">Cancel</button></div>
+    </div>`;
+  }
+
+  // weeks
+  const weeks = WEEKS.map(week => {
+    const meta  = WEEK_META[week];
+    const tc    = THEME_CH[meta.theme];
+    const wItems = f.filter(i => i.week === week);
+    if (!wItems.length) return "";
+
+    const rows = wItems.map(item => {
+      const isOpen = expandedId === item.id;
+      const bc = BRAND_CH[item.brand]   || BRAND_CH["Freedom"];
+      const cc = CHAN_CH[item.channel]  || CHAN_CH["Blog"];
+      const sc = STAT_CH[item.status]  || STAT_CH["To Do"];
+      const icons = (item.link ? ` <span class="item-icon">↗</span>` : "") + (item.notes ? ` <span class="item-icon">✎</span>` : "");
+
+      let expanded = "";
+      if (isOpen) {
+        expanded = `<div class="item-expanded">
+          <div class="edit-grid">
+            <div class="form-field"><label>Content idea</label><textarea rows="3" oninput="onEditField('idea',this.value)">${esc(editForm.idea||"")}</textarea></div>
+            <div class="form-field"><label>Notes</label><textarea rows="3" oninput="onEditField('notes',this.value)" placeholder="Add notes, copy ideas or feedback...">${esc(editForm.notes||"")}</textarea></div>
+          </div>
+          <div class="edit-meta">
+            <div class="form-field"><label>Status</label>${selHtml("status",editForm.status||"To Do",STATUSES,"onEditField('status',this.value)")}</div>
+            <div class="form-field"><label>Brand</label>${selHtml("brand",editForm.brand||"Freedom",BRANDS,"onEditField('brand',this.value)")}</div>
+            <div class="form-field"><label>Channel</label>${selHtml("channel",editForm.channel||"Blog",CHANNELS,"onEditField('channel',this.value)")}</div>
+            <div class="form-field"><label>Date</label><input value="${esc(editForm.date||"")}" oninput="onEditField('date',this.value)" /></div>
+          </div>
+          <div class="form-field edit-link"><label>Link to published content</label><input value="${esc(editForm.link||"")}" oninput="onEditField('link',this.value)" placeholder="https://..." /></div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="doSaveEdit()">Save</button>
+            <button class="btn-secondary" onclick="doCancelEdit()">Cancel</button>
+            <button class="btn-danger" onclick="doDelete()">Delete</button>
+          </div>
+        </div>`;
+      }
+
+      return `<div class="item-row" style="border-color:${tc.border};">
+        <div class="item-summary" onclick="toggleRow('${item.id}')" style="background:${isOpen?"#f7f6f2":"#fff"}">
+          <div class="item-left">
+            <div class="item-meta">
+              <span class="item-date">${esc(item.date)}</span>
+              ${pill(bc.bg,bc.color,item.brand)}
+              ${pill(cc.bg,cc.color,item.channel)}
+              ${icons}
+            </div>
+            <div class="item-idea">${esc(item.idea)}</div>
+          </div>
+          <div class="item-status">${pill(sc.bg,sc.color,item.status)}</div>
+        </div>
+        ${expanded}
+      </div>`;
+    }).join("");
+
+    return `<div class="week-group" style="border-color:${tc.border};">
+      <div class="week-head" style="background:${tc.bg};">
+        <span class="week-head-title" style="color:${tc.color};">${week} — ${meta.label}</span>
+        <span class="week-head-sub" style="color:${tc.color};">${meta.dates} · ${wItems.length} items</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join("");
+
+  app.innerHTML = topbar + stats + toolbar + addForm +
+    (f.length === 0 ? `<div class="empty">No items match your filters.</div>` : weeks);
+}
+</script>
+</body>
+</html>
