@@ -195,6 +195,7 @@ function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").
 function pill(bg,color,text){return `<span class="pill" style="background:${bg};color:${color}">${esc(text)}</span>`;}
 function sel(val,opts,fn){return `<select onchange="${fn}">${opts.map(o=>`<option${o===val?" selected":""}>${esc(o)}</option>`).join("")}</select>`;}
 function filtered(){return items.filter(i=>(filters.brand==="All"||i.brand===filters.brand)&&(filters.channel==="All"||i.channel===filters.channel)&&(filters.status==="All"||i.status===filters.status));}
+function getDayNum(item){if(item.dayNum)return item.dayNum;const m=String(item.date||"").match(/\b(\d{1,2})\s+Apr/i);return m?parseInt(m[1]):null;}
 window.signIn=signIn;window.signOut=signOut;
 window.setFilter=(k,v)=>{filters[k]=v;render();};
 window.setView=(v)=>{view=v;expandedId=null;editForm={};modalDay=null;render();};
@@ -272,7 +273,7 @@ function render(){
     const cells=CAL_DAYS.map(cell=>{
       if(!cell.d)return`<div class="cal-cell empty"></div>`;
       const isWE=cell.dow===0||cell.dow===6;
-      const di=f.filter(i=>i.dayNum===cell.d);
+      const di=f.filter(i=>getDayNum(i)===cell.d);
       const max=3;
       const chips=di.slice(0,max).map(item=>{const bc=BRAND_CH[item.brand]||BRAND_CH["Freedom"];return`<span class="cal-chip" style="background:${bc.bg};color:${bc.color}" onclick="openItem('${item.id}')" title="${esc(item.idea)}">${esc(item.brand)}: ${esc(item.idea)}</span>`;}).join("");
       const more=di.length>max?`<div class="cal-more" onclick="openModal(${cell.d})">+${di.length-max} more</div>`:"";
@@ -313,7 +314,7 @@ function render(){
   }
   let modal="";
   if(modalDay!==null){
-    const di=filtered().filter(i=>i.dayNum===modalDay);
+    const di=filtered().filter(i=>getDayNum(i)===modalDay);
     const rows=di.map(item=>{const bc=BRAND_CH[item.brand]||BRAND_CH["Freedom"];const cc=CHAN_CH[item.channel]||CHAN_CH["Blog"];const stt=STAT_CH[item.status]||STAT_CH["To Do"];
       return`<div style="padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer" onclick="openItem('${item.id}')">
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">${pill(bc.bg,bc.color,item.brand)}${pill(cc.bg,cc.color,item.channel)}${pill(stt.bg,stt.color,item.status)}</div>
